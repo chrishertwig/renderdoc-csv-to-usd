@@ -1,0 +1,19 @@
+{
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": false,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.importFormat": "relative",
+    "python.analysis.typeCheckingMode": "basic",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+    },
+    },
+    "isort.args":["--profile", "black"],
+}

@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run renderdoc_csv_to_usd",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/renderdoc_csv_to_usd.py",
+            "args": [
+                "C:/Users/chris/Desktop/renderdoc/damaged_01.csv"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
