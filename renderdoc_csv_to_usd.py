@@ -1,12 +1,11 @@
 import sys
 from enum import Enum
 from pathlib import Path
-from struct import pack
 from typing import List, Optional
 
 import numpy as np
 import pandas as pd
-from pxr import Usd, UsdGeom, Vt
+from pxr import Usd, UsdGeom
 
 # CSV field names from RenderDoc.
 # Leading white space is intentional to match the CSV output.
