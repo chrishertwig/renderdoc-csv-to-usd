@@ -220,15 +220,7 @@ def _process_snake3_body(csv_path: Path, data: pd.DataFrame) -> None:
 def _unpack_normal(packed: float) -> np.ndarray:
     """
     Unpack float3 from packed float value.
-
-    mul r0.xyz, v3.xxxx, l(0.000015, 1.000000, 0.003906, 0.000000)
-    frc r0.xyz, r0.xyzx
-    mad r0.xyz, r0.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
-    dp3 r0.w, r0.xyzx, r0.xyzx
-    rsq r0.w, r0.w
-    mul r0.xyz, r0.wwww, r0.xyzx
     """
-
     scaling_factors = np.array([1.0, 0.003906, 0.000015])
 
     # mul, frc, mad
@@ -246,12 +238,7 @@ def _unpack_normal(packed: float) -> np.ndarray:
 def _mesh_deformation(position: np.ndarray) -> np.ndarray:
     """
     Apply vertex deformation from packed vertex data.
-
-    mul r8.xyz, v0.wwww, l(1.000000, 0.003906, 0.000015, 0.000000)
-    frc r8.xyz, r8.xyzx
-    mad r8.xyz, r8.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
     """
-
     scaling_factors = np.array([1.000000, 0.003906, 0.000015])
 
     # mul, frc, mad
