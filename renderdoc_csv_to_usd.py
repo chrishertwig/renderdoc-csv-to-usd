@@ -109,7 +109,7 @@ def _save_usd(csv_path: Path, meshDataList: List[MeshData]) -> None:
             print(f"Invalid mesh data for {meshData.name}. Skipping.")
             continue
 
-        mesh_path = f'/{meshData.name}'
+        mesh_path = f'/{csv_path.stem}_{meshData.name}'
         mesh = UsdGeom.Mesh.Define(stage, mesh_path)
 
         mesh.CreatePointsAttr(meshData.vertices)
@@ -188,26 +188,34 @@ def _process_snake3_body(csv_path: Path, data: pd.DataFrame) -> None:
     vertex_count = csv_indices.max() + 1
     index_count = len(csv_indices)
 
-    # Allocate arrays for mesh
+    # Allocate arrays for meshes
     mesh = MeshData()
-    mesh.name = 'deformed'
+    mesh.name = 'mesh'
     mesh.vertices = np.empty((vertex_count, 3))
     mesh.normals = np.empty((vertex_count, 3))
     mesh.indices = np.empty(index_count)
+
+    mesh_deformed = MeshData()
+    mesh_deformed.name = 'deformed'
+    mesh_deformed.vertices = np.empty((vertex_count, 3))
+    mesh_deformed.normals = np.empty((vertex_count, 3))
+    mesh_deformed.indices = np.empty(index_count)
 
     # Loop over data and store unique vertices and fill index array
     offset = 0
     for i in range(index_count):
         idx = int(csv_indices[i])
         if offset <= idx: # Only new vertices
-            mesh.vertices[offset] = _mesh_deformation(csv_positions[i], csv_texcoords3[i])
+            mesh.vertices[offset] = csv_positions[i, 0:3]
             mesh.normals[offset] = _unpack_normal(csv_texcoords3[i, 0])
+            mesh_deformed.vertices[offset] = _mesh_deformation(csv_positions[i])
+            mesh_deformed.normals[offset] = _unpack_normal(csv_texcoords3[i, 0])
             offset += 1
         # Always store the index
         mesh.indices[i] = idx
+        mesh_deformed.indices[i] = idx
 
-    _save_usd(csv_path, [mesh])
-
+    _save_usd(csv_path, [mesh, mesh_deformed])
 
 def _unpack_normal(packed: float) -> np.ndarray:
     """
@@ -220,33 +228,34 @@ def _unpack_normal(packed: float) -> np.ndarray:
     rsq r0.w, r0.w
     mul r0.xyz, r0.wwww, r0.xyzx
     """
-    scaling_factors = np.array([0.000015, 1.000000, 0.003906])
+
+    scaling_factors = np.array([1.0, 0.003906, 0.000015])
 
     # mul, frc, mad
-    r0 = packed * scaling_factors
-    r0 = np.fmod(r0, 1.0)
-    r0 = r0 * 2.0 - 1.0
+    unpacked = packed * scaling_factors
+    unpacked = np.fmod(unpacked, 1.0)
+    unpacked = unpacked * 2.0 - 1.0
 
     # dp3, rsq, mul
-    length_squared = np.dot(r0, r0)
+    length_squared = np.dot(unpacked, unpacked)
     inv_length = 1.0 / np.sqrt(length_squared)
-    r0 = r0 * inv_length
+    unpacked = unpacked * inv_length
 
-    return r0
+    return unpacked
 
-def _mesh_deformation(position: np.ndarray, packed: np.ndarray) -> np.ndarray:
+def _mesh_deformation(position: np.ndarray) -> np.ndarray:
     """
     Apply vertex deformation from packed vertex data.
 
-    mul r9.xyz, abs(v4.wwww), l(1.000000, 0.003906, 0.000015, 0.000000)
-    frc r9.xyz, r9.xyzx
-    mad r9.xyz, r9.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
+    mul r8.xyz, v0.wwww, l(1.000000, 0.003906, 0.000015, 0.000000)
+    frc r8.xyz, r8.xyzx
+    mad r8.xyz, r8.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
     """
 
     scaling_factors = np.array([1.000000, 0.003906, 0.000015])
 
     # mul, frc, mad
-    offset = packed[3] * scaling_factors
+    offset = position[3] * scaling_factors
     offset = offset - np.floor(offset)
     offset = offset * 2.0 - 1.0
 
